@@ -1,0 +1,40 @@
+image: docker:24
+
+services:
+  - docker:24-dind
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - build
+  - test
+  - push_to_docker_hub
+  - deploy
+
+build_job:
+  stage: build
+  script:
+    - docker build -t node-app:latest .
+
+test_job:
+  stage: test
+  script:
+    - echo "tests..."
+
+push_to_docker_hub:
+  stage: push_to_docker_hub
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker build -t  $DOCKERHUB_USER/node-app:latest .
+    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+    - docker push $DOCKERHUB_USER/node-app:latest
+
+deploy_job:
+  stage: deploy
+  script:
+    - echo "deploying..."
